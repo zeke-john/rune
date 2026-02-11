@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type ColoredFrameRow = [string, string[]];
 type ColoredFrame = ColoredFrameRow[];
@@ -31,49 +31,6 @@ function buildColoredFrameHtml(frame: ColoredFrame): string {
   return lines.join("\n");
 }
 
-class AnimationManager {
-  private _animation: number | null = null;
-  private callback: () => void;
-  private lastFrame = -1;
-  private frameTime = 1000 / 30;
-
-  constructor(callback: () => void, fps = 30) {
-    this.callback = callback;
-    this.frameTime = 1000 / fps;
-  }
-
-  updateFPS(fps: number) {
-    this.frameTime = 1000 / fps;
-  }
-
-  start() {
-    if (this._animation != null) return;
-    this._animation = requestAnimationFrame(this.update);
-  }
-
-  pause() {
-    if (this._animation == null) return;
-    this.lastFrame = -1;
-    cancelAnimationFrame(this._animation);
-    this._animation = null;
-  }
-
-  private update = (time: number) => {
-    const { lastFrame } = this;
-    let delta = time - lastFrame;
-    if (this.lastFrame === -1) {
-      this.lastFrame = time;
-    } else {
-      while (delta >= this.frameTime) {
-        this.callback();
-        delta -= this.frameTime;
-        this.lastFrame += this.frameTime;
-      }
-    }
-    this._animation = requestAnimationFrame(this.update);
-  };
-}
-
 interface ASCIIAnimationProps {
   frames?: string[];
   className?: string;
@@ -93,119 +50,175 @@ export default function ASCIIAnimation({
   frameFolder = "frames",
   colored = false,
 }: ASCIIAnimationProps) {
-  const [frames, setFrames] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentFrame, setCurrentFrame] = useState(0);
+  const [status, setStatus] = useState<"idle" | "loading" | "ready">("idle");
   const framesRef = useRef<string[]>([]);
+  const frameIndexRef = useRef(0);
+  const displayRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<number | null>(null);
+  const lastFrameTimeRef = useRef(-1);
+  const isVisibleRef = useRef(false);
+  const hasLoadedRef = useRef(false);
 
-  const [animationManager] = useState(
-    () =>
-      new AnimationManager(() => {
-        setCurrentFrame((current) => {
-          if (framesRef.current.length === 0) return current;
-          return (current + 1) % framesRef.current.length;
-        });
-      }, fps),
+  const renderFrame = useCallback(() => {
+    const el = displayRef.current;
+    const frames = framesRef.current;
+    if (!el || frames.length === 0) return;
+    const idx = frameIndexRef.current;
+    if (colored) {
+      el.innerHTML = frames[idx];
+    } else {
+      el.textContent = frames[idx];
+    }
+  }, [colored]);
+
+  const tick = useCallback(
+    (time: number) => {
+      const frameTime = 1000 / fps;
+      if (lastFrameTimeRef.current === -1) {
+        lastFrameTimeRef.current = time;
+      } else {
+        let delta = time - lastFrameTimeRef.current;
+        while (delta >= frameTime) {
+          const len = framesRef.current.length;
+          if (len > 0) {
+            frameIndexRef.current = (frameIndexRef.current + 1) % len;
+            renderFrame();
+          }
+          delta -= frameTime;
+          lastFrameTimeRef.current += frameTime;
+        }
+      }
+      animationRef.current = requestAnimationFrame(tick);
+    },
+    [fps, renderFrame],
   );
 
-  useEffect(() => {
-    const loadFrames = async () => {
-      if (providedFrames) {
-        setFrames(providedFrames);
-        framesRef.current = providedFrames;
-        setIsLoading(false);
-        return;
-      }
+  const startAnimation = useCallback(() => {
+    if (animationRef.current != null) return;
+    lastFrameTimeRef.current = -1;
+    animationRef.current = requestAnimationFrame(tick);
+  }, [tick]);
 
-      const ext = colored ? "json" : "txt";
-      const frameFiles = Array.from(
-        { length: frameCount },
-        (_, i) => `frame_${String(i + 1).padStart(4, "0")}.${ext}`,
-      );
+  const stopAnimation = useCallback(() => {
+    if (animationRef.current == null) return;
+    cancelAnimationFrame(animationRef.current);
+    animationRef.current = null;
+  }, []);
 
-      const framePromises = frameFiles.map(async (filename) => {
-        const response = await fetch(`/${frameFolder}/${filename}`);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch ${filename}: ${response.status}`);
-        }
-        if (colored) {
-          const data: ColoredFrame = await response.json();
-          return buildColoredFrameHtml(data);
-        }
-        return response.text();
-      });
+  const loadFrames = useCallback(async () => {
+    if (hasLoadedRef.current) return;
+    hasLoadedRef.current = true;
 
-      const loadedFrames = await Promise.all(framePromises);
-      setFrames(loadedFrames);
-      framesRef.current = loadedFrames;
-      setCurrentFrame(0);
-      setIsLoading(false);
-    };
-
-    loadFrames();
-  }, [providedFrames, colored, frameCount, frameFolder]);
-
-  useEffect(() => {
-    animationManager.updateFPS(fps);
-  }, [fps, animationManager]);
-
-  useEffect(() => {
-    if (frames.length === 0) return;
-
-    const reducedMotion =
-      window.matchMedia(`(prefers-reduced-motion: reduce)`).matches === true;
-
-    if (reducedMotion) {
+    if (providedFrames) {
+      framesRef.current = providedFrames;
+      setStatus("ready");
       return;
     }
 
-    const handleFocus = () => animationManager.start();
-    const handleBlur = () => animationManager.pause();
+    setStatus("loading");
+
+    const ext = colored ? "json" : "txt";
+    const frameFiles = Array.from(
+      { length: frameCount },
+      (_, i) => `frame_${String(i + 1).padStart(4, "0")}.${ext}`,
+    );
+
+    const BATCH_SIZE = 10;
+    const loadedFrames: string[] = [];
+
+    for (let i = 0; i < frameFiles.length; i += BATCH_SIZE) {
+      const batch = frameFiles.slice(i, i + BATCH_SIZE);
+      const results = await Promise.all(
+        batch.map(async (filename) => {
+          const response = await fetch(`/${frameFolder}/${filename}`);
+          if (!response.ok) return "";
+          if (colored) {
+            const data: ColoredFrame = await response.json();
+            return buildColoredFrameHtml(data);
+          }
+          return response.text();
+        }),
+      );
+      loadedFrames.push(...results);
+    }
+
+    framesRef.current = loadedFrames.filter(Boolean);
+    frameIndexRef.current = 0;
+    setStatus("ready");
+  }, [providedFrames, colored, frameCount, frameFolder]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          loadFrames();
+        }
+      },
+      { rootMargin: "400px", threshold: 0 },
+    );
+    observer.observe(container);
+
+    return () => observer.disconnect();
+  }, [loadFrames]);
+
+  useEffect(() => {
+    if (status !== "ready") return;
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (reducedMotion) return;
+
+    renderFrame();
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisibleRef.current = entry.isIntersecting;
+        if (entry.isIntersecting && document.hasFocus()) {
+          startAnimation();
+        } else {
+          stopAnimation();
+        }
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(container);
+
+    const handleFocus = () => {
+      if (isVisibleRef.current) startAnimation();
+    };
+    const handleBlur = () => stopAnimation();
 
     window.addEventListener("focus", handleFocus);
     window.addEventListener("blur", handleBlur);
 
-    if (document.visibilityState === "visible") {
-      animationManager.start();
-    }
-
     return () => {
+      observer.disconnect();
       window.removeEventListener("focus", handleFocus);
       window.removeEventListener("blur", handleBlur);
-      animationManager.pause();
+      stopAnimation();
     };
-  }, [animationManager, frames.length]);
-
-  if (isLoading) {
-    return (
-      <div className={`font-mono whitespace-pre overflow-hidden ${className}`}>
-        Loading ASCII animation...
-      </div>
-    );
-  }
-
-  if (!frames.length) {
-    return (
-      <div className={`font-mono whitespace-pre overflow-hidden ${className}`}>
-        No frames loaded
-      </div>
-    );
-  }
+  }, [status, startAnimation, stopAnimation, renderFrame]);
 
   return (
     <div
+      ref={containerRef}
       className={`relative font-mono whitespace-pre overflow-hidden text-xs leading-none ${className}`}
     >
+      {status !== "ready" && (
+        <div className="text-neutral-600">
+          {status === "loading" ? "Loading frames..." : ""}
+        </div>
+      )}
       <div className="relative">
-        {colored ? (
-          <div
-            dangerouslySetInnerHTML={{
-              __html: frames[currentFrame],
-            }}
-          />
-        ) : (
-          frames[currentFrame]
-        )}
+        <div ref={displayRef} />
 
         {colorOverlay && (
           <div

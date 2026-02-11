@@ -19,7 +19,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${geistMono.variable} ${geistMono.className} antialiased`}>
+      <head>
+        <script src="//unpkg.com/react-scan/dist/auto.global.js" async />
+      </head>
+      <body
+        className={`${geistMono.variable} ${geistMono.className} antialiased`}
+      >
         {children}
       </body>
     </html>
