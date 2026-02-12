@@ -1,6 +1,10 @@
 export type RuneFrameRow = [text: string, colors: string[]];
 
-export type RuneFrame = RuneFrameRow[];
+export type RuneColoredFrame = RuneFrameRow[];
+
+export type RunePlainFrame = string[];
+
+export type RuneFrame = RuneColoredFrame | RunePlainFrame;
 
 export interface RuneGenerationSettings {
   thresholdLow: number;

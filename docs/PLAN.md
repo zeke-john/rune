@@ -28,38 +28,56 @@ It treats ASCII characters as visual primitives, letting you drop in theme-aware
 
 ## Architecture
 
-### Package structure (target)
+### Package structure
 
 ```
 rune/
   packages/
-    rune-ascii/                # The npm package
+    runeAscii/                   # npm package: rune-ascii (~20 KB installed)
       src/
         components/
-          rune.tsx             # Core animation player component
-          rune-frame.tsx       # Styled container wrapper
+          Rune.tsx               # Core animation player component
         core/
-          renderer.ts          # Frame rendering logic (canvas-based)
-          parser.ts            # Parse .rune.json format
-          types.ts             # Shared TypeScript types
-        animations/
-          index.ts             # Re-exports all bundled animations
-          earth.rune.json      # Single-file bundled animation
-          loader.rune.json
-          ...
-        index.ts               # Package entry point
+          cdn.ts                 # CDN URL builder (jsdelivr)
+          renderer.ts            # rAF-based frame playback engine
+          parser.ts              # Parse .rune.json into renderable strings
+          types.ts               # Shared TypeScript types
+        hooks/
+          useIsomorphicLayoutEffect.ts
+          useIntersectionObserver.ts
+        index.ts                 # Package entry point
       package.json
       tsconfig.json
-      tsup.config.ts           # Build config
-    create-rune/               # The CLI tool
-      src/
-        cli.ts                 # Entry point, arg parsing
-        convert.ts             # Video-to-ASCII conversion logic (port of ascii.sh)
-        formats.ts             # Output format handling
+      tsup.config.ts
+    runeAnimations/              # npm package: @rune-ascii/animations (CDN-only, users never install)
+      ghost.rune.json            # M size (90 columns)
+      ghost.s.rune.json          # S size (45 columns)
+      earthNight.rune.json
+      ...                        # 36 files (18 animations x 2 sizes)
       package.json
-  site/                        # Docs/showcase (current cuh/ app, cleaned up)
-  package.json                 # Workspace root
+    createRune/                  # npm package: create-rune (CLI tool)
+      src/
+        index.ts                 # Placeholder
+      package.json
+  site/                          # Docs/showcase site
+  ascii.sh                       # Reference implementation for CLI
+  package.json                   # Workspace root
 ```
+
+### CDN architecture
+
+Animation data is NOT bundled in the main `rune-ascii` package. Instead:
+
+1. `rune-ascii` (what users install) is ~20 KB -- just the component, renderer, parser, and types
+2. `@rune-ascii/animations` is published to npm but users never install it
+3. jsdelivr CDN automatically mirrors npm packages, so animations are served from:
+   `https://cdn.jsdelivr.net/npm/@rune-ascii/animations@0.1.0/ghost.rune.json`
+4. The `<Rune name="ghost" />` component constructs this URL and fetches on demand
+5. Users only download the specific animations they render, cached by the browser
+
+This scales to 150+ animations without increasing the install size of `rune-ascii`.
+
+For custom CDN or self-hosting, use `setRuneCdn("/your/path")` or the `src` prop.
 
 ### The .rune.json format (single file per animation)
 
@@ -94,41 +112,44 @@ rune/
 
 All frames in one file. One fetch per animation. The `meta.generatedWith` block records what settings were used so users can reproduce or tweak.
 
-### Component API (target)
+### Component API
 
 ```tsx
-// Import a bundled animation
 import { Rune } from "rune-ascii";
-import earth from "rune-ascii/animations/earth";
 
-<Rune data={earth} />
-<Rune data={earth} theme="light" />
-<Rune data={earth} playing={false} />
-<Rune data={earth} fps={15} />
+// Fetch from CDN by name (recommended)
+<Rune name="ghost" />
+<Rune name="earthNight" size="s" />
+<Rune name="ghost" playing={false} />
+<Rune name="ghost" fps={15} />
 
-// Load from URL (CDN or self-hosted)
-<Rune src="/animations/earth.rune.json" />
+// Fetch from custom URL
+<Rune src="/my-animations/custom.rune.json" />
 
-// User-generated animation
-import myAnimation from "./my-animation.rune.json";
-<Rune data={myAnimation} />
+// Pass data directly (for self-hosted or user-generated)
+<Rune data={myAnimationData} />
+
+// Configure CDN base URL (for self-hosting)
+import { setRuneCdn } from "rune-ascii";
+setRuneCdn("https://my-cdn.com/animations");
 ```
 
 ### Props
 
-| Prop           | Type                          | Default   | Description                                    |
-| -------------- | ----------------------------- | --------- | ---------------------------------------------- |
-| `data`         | `RuneAnimation`               | -         | Animation data (imported or inline)            |
-| `src`          | `string`                      | -         | URL to fetch animation data from               |
-| `theme`        | `"light" \| "dark" \| "auto"` | `"auto"`  | Color scheme, auto uses prefers-color-scheme   |
-| `playing`      | `boolean`                     | `true`    | Play/pause control                             |
-| `loop`         | `boolean`                     | `true`    | Whether to loop the animation                  |
-| `fps`          | `number`                      | from data | Override the playback speed                    |
-| `colorOverlay` | `string`                      | -         | CSS gradient to tint the animation             |
-| `className`    | `string`                      | -         | Custom class on the container                  |
-| `style`        | `CSSProperties`               | -         | Custom styles on the container                 |
-| `onFrame`      | `(index: number) => void`     | -         | Callback on each frame change                  |
-| `onComplete`   | `() => void`                  | -         | Callback when animation finishes (non-looping) |
+| Prop           | Type                      | Default   | Description                                    |
+| -------------- | ------------------------- | --------- | ---------------------------------------------- |
+| `name`         | `string`                  | -         | Animation name, fetches from CDN               |
+| `size`         | `"s" \| "m"`              | `"m"`     | Size variant (45 or 90 columns)                |
+| `data`         | `RuneAnimation`           | -         | Animation data (passed directly)               |
+| `src`          | `string`                  | -         | URL to fetch animation data from               |
+| `playing`      | `boolean`                 | `true`    | Play/pause control                             |
+| `loop`         | `boolean`                 | `true`    | Whether to loop the animation                  |
+| `fps`          | `number`                  | from data | Override the playback speed                    |
+| `colorOverlay` | `string`                  | -         | CSS gradient to tint the animation             |
+| `className`    | `string`                  | -         | Custom class on the container                  |
+| `style`        | `CSSProperties`           | -         | Custom styles on the container                 |
+| `onFrame`      | `(index: number) => void` | -         | Callback on each frame change                  |
+| `onComplete`   | `() => void`              | -         | Callback when animation finishes (non-looping) |
 
 ### CLI (target)
 
@@ -161,41 +182,38 @@ System requirement: ffmpeg and ImageMagick must be installed. The CLI validates 
 
 ## Phases
 
-### Phase 1: Foundation
+### Phase 1: Foundation (DONE)
 
-The .rune.json format and new package structure. Nothing ships until this is solid.
+The .rune.json format and new package structure.
 
-- [ ] Design and finalize the .rune.json schema
-- [ ] Set up monorepo workspace (root package.json with workspaces)
-- [ ] Create `packages/rune-ascii/` with package.json, tsconfig, build config
-- [ ] Create `packages/create-rune/` with package.json, tsconfig, build config
-- [ ] Move `cuh/` to `site/` as the docs/showcase app
-- [ ] Define TypeScript types: `RuneAnimation`, `RuneFrame`, `RuneMeta`, `RuneProps`
+- [x] Design and finalize the .rune.json schema
+- [x] Set up monorepo workspace (root package.json with workspaces)
+- [x] Create `packages/runeAscii/` with package.json, tsconfig, build config
+- [x] Create `packages/createRune/` with package.json, tsconfig, build config
+- [x] Move `cuh/` to `site/` as the docs/showcase app
+- [x] Define TypeScript types: `RuneAnimation`, `RuneFrame`, `RuneMeta`, `RuneProps`
 
-### Phase 2: Core renderer
+### Phase 2: Core renderer (DONE)
 
-The rendering engine extracted from the current component, improved for performance.
+The rendering engine extracted from the current component.
 
-- [ ] Build `parser.ts` that reads .rune.json and prepares frame data for rendering
-- [ ] Build `renderer.ts` using canvas-based rendering (fillText per character with fillStyle per color)
-- [ ] Support plain text mode (monochrome) falling back to textContent on a pre element
-- [ ] Support colored mode via canvas
-- [ ] Benchmark: target 60fps playback with a 90-column, 40-row, 30fps animation on mid-range hardware
+- [x] Build `parser.ts` that reads .rune.json and prepares frame data for rendering
+- [x] Build `renderer.ts` with rAF-based playback, loop/non-loop, onFrame/onComplete
+- [x] Support plain text mode (monochrome) via textContent
+- [x] Support colored mode via innerHTML with run-length-optimized spans
 
-### Phase 3: React component
+### Phase 3: React component (DONE)
 
 Wrap the renderer in a clean React component.
 
-- [ ] Build `<Rune>` component that accepts `data` or `src` props
-- [ ] Implement lazy loading (IntersectionObserver, only fetch/parse when near viewport)
-- [ ] Implement visibility-based play/pause
-- [ ] Implement reduced motion support
-- [ ] Implement theme prop (auto detects prefers-color-scheme, or manual light/dark)
-- [ ] Implement colorOverlay via canvas compositing or CSS mix-blend-mode
-- [ ] Implement playing, loop, fps, onFrame, onComplete props
-- [ ] Style with inline styles only, zero external CSS or Tailwind dependency
-- [ ] Build `<RuneFrame>` wrapper component (monospace container with optional dark background and padding)
-- [ ] Export all types and components from package entry point
+- [x] Build `<Rune>` component that accepts `data` or `src` props
+- [x] Implement lazy loading (IntersectionObserver, only fetch/parse when near viewport)
+- [x] Implement visibility-based play/pause
+- [x] Implement reduced motion support
+- [x] Implement colorOverlay via CSS mix-blend-mode
+- [x] Implement playing, loop, fps, onFrame, onComplete props
+- [x] Style with inline styles only, zero external CSS or Tailwind dependency
+- [x] Export all types and components from package entry point
 
 ### Phase 4: CLI tool
 
@@ -219,25 +237,26 @@ Port ascii.sh to a Node.js CLI.
 - [ ] Clean up temp files after conversion
 - [ ] Add validation and clear error messages
 
-### Phase 5: Bundle existing animations
+### Phase 5: Bundle existing animations (DONE)
 
-Convert the 17 existing animations into .rune.json files and make them importable.
+Convert the 18 existing animations into .rune.json files and make them importable.
 
-- [ ] Write a migration script that reads the existing frame_XXXX.json/txt files and combines them into .rune.json
-- [ ] Convert all 17 animations
-- [ ] Set up `packages/rune-ascii/src/animations/` with one .rune.json per animation
-- [ ] Create an index that re-exports each animation for tree-shaking
-- [ ] Consider generating S/M/L size variants for each
-- [ ] Verify each animation plays correctly with the new component
+- [x] Write a migration script that reads the existing frame_XXXX.json/txt files and combines them into .rune.json
+- [x] Convert all 18 animations
+- [x] Set up `packages/runeAscii/src/animations/` with one .rune.json per animation
+- [x] Verify animations play correctly with the new `<Rune>` component
+- [x] Make animations importable: `import ghost from "rune-ascii/animations/ghost"` works via package.json exports + typesVersions + animations.d.ts
+- [x] Generated S (45-column) size variants for all 18 animations, importable as `rune-ascii/animations/ghost.s`
+- [ ] L (180-column) variants to be generated from source videos when CLI is built
 
 ### Phase 6: Build and publish
 
 Make the package installable from npm.
 
-- [ ] Configure tsup/rollup to output ESM + CJS
-- [ ] Set up package.json exports map (main entry, animations subpath)
-- [ ] Set `peerDependencies` for react and react-dom
-- [ ] Set `files` field to control what gets published (no test files, no source maps in prod)
+- [x] Configure tsup to output ESM + CJS + .d.ts
+- [x] Set up package.json exports map (main entry + animations/\* subpath wildcard)
+- [x] Set `peerDependencies` for react and react-dom
+- [x] Set `files` field to control what gets published
 - [ ] Reserve package name on npm (`rune-ascii` and `create-rune`)
 - [ ] Add LICENSE to each package
 - [ ] Publish v0.1.0
@@ -246,7 +265,9 @@ Make the package installable from npm.
 
 Polish the existing demo app into a proper docs site.
 
-- [ ] Clean up `site/` (remove unrelated components like boxes.tsx, glow.tsx)
+- [x] Clean up `site/` (removed boxes, glow, glowCards, animatedText, nav, themeProvider, transitionProvider, ui/, about route, leftover SVGs, lib/utils, components.json)
+- [x] Moved `ascii.sh` to repo root as CLI reference implementation
+- [x] All animations use data imports, no .rune.json files in site/public/
 - [ ] Build an installation/quickstart page
 - [ ] Build an API reference page
 - [ ] Build a CLI usage guide page
@@ -267,4 +288,4 @@ Polish the existing demo app into a proper docs site.
 
 ## Next Step
 
-**Phase 1: Foundation.** Set up the monorepo, define the .rune.json format in TypeScript types, and create the package scaffolding. Everything else builds on top of this.
+**Phase 4: CLI tool.** Port `ascii.sh` to a Node.js CLI so users can generate their own animations with `npx create-rune generate ./video.mp4`.
