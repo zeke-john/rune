@@ -8,33 +8,38 @@ setRuneCdn("/animations");
 const animations = [
   {
     name: "fire",
+    label: "Campfire",
     colorOverlay:
       "linear-gradient(90deg, rgba(247,70,5,0.6) 0%, rgba(255,140,0,1) 100%)",
   },
-  { name: "ghost" },
-  { name: "fireflame" },
+  { name: "ghost", label: "Ghost" },
+  { name: "fireflame", label: "Flame" },
   {
     name: "danger",
+    label: "Hazard",
     colorOverlay:
       "linear-gradient(135deg, rgba(200,0,0,0.8) 0%, rgba(255,30,30,1) 100%)",
   },
-  { name: "loader" },
-  { name: "coin" },
-  { name: "earthNight" },
-  { name: "earthDay" },
-  { name: "saturn" },
-  { name: "orangutan" },
-  { name: "shoes" },
-  { name: "sleepy" },
-  { name: "angry" },
-  { name: "idk" },
-  { name: "loaderGood" },
-  { name: "success" },
-  { name: "error" },
-  { name: "linux" },
-  { name: "rocket" },
-  { name: "sideFlames" },
-  { name: "cubes" },
+  { name: "loader", label: "Spinner" },
+  { name: "coin", label: "Gold Coin" },
+  { name: "earthNight", label: "Earth Night" },
+  { name: "earthDay", label: "Earth Day" },
+  { name: "saturn", label: "Saturn" },
+  { name: "orangutan", label: "Orangutan" },
+  { name: "shoes", label: "Sneakers" },
+  { name: "sleepy", label: "Sleepy" },
+  { name: "angry", label: "Rage" },
+  { name: "idk", label: "Geeked" },
+  { name: "loaderGood", label: "Spinner 2" },
+  { name: "success", label: "Success" },
+  { name: "error", label: "Error" },
+  { name: "linux", label: "Tux" },
+  { name: "rocket", label: "Rocket" },
+  { name: "sideFlames", label: "Side Flames" },
+  { name: "cubes", label: "Cubes" },
+  { name: "dawg", label: "Dawg" },
+  { name: "cubesInnaGlass", label: "Cubes in Glass w/ BG" },
+  { name: "arrow", label: "Arrow" },
 ];
 
 type Size = "s" | "m" | "l";
@@ -90,9 +95,11 @@ function DetailToggle({
 
 function AnimationCard({
   name,
+  label,
   colorOverlay,
 }: {
   name: string;
+  label: string;
   colorOverlay?: string;
 }) {
   const [size, setSize] = useState<Size>("m");
@@ -116,7 +123,7 @@ function AnimationCard({
             letterSpacing: 4,
           }}
         >
-          {name}
+          {label}
         </h2>
         <DetailToggle active={size} onChange={setSize} />
       </div>
@@ -137,6 +144,7 @@ export default function Home() {
         <AnimationCard
           key={anim.name}
           name={anim.name}
+          label={anim.label}
           colorOverlay={anim.colorOverlay}
         />
       ))}
