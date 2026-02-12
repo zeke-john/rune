@@ -1,0 +1,7 @@
+{
+  "name": "rune",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ]
+}
