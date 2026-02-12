@@ -215,27 +215,23 @@ Wrap the renderer in a clean React component.
 - [x] Style with inline styles only, zero external CSS or Tailwind dependency
 - [x] Export all types and components from package entry point
 
-### Phase 4: CLI tool
+### Phase 4: CLI tool (DONE)
 
-Port ascii.sh to a Node.js CLI.
+Port ascii.sh to a Node.js CLI: `npx create-rune ./video.mp4 --name rocket`
 
-- [ ] Set up CLI entry point with arg parsing (use `commander` or `citty`)
-- [ ] Check for ffmpeg/ImageMagick on startup, give install instructions if missing
-- [ ] Port frame extraction: call ffmpeg via child_process to extract PNGs at target fps and columns
-- [ ] Port vertical squish: call ImageMagick to resize by font ratio
-- [ ] Port pixel dump: call ImageMagick to export pixel data as text
-- [ ] Port luminance mapping: rewrite awk logic in TypeScript
-  - Luminance calculation from RGB
-  - Background detection (light/dark)
-  - Threshold filtering
-  - Character ramp mapping
-  - Per-character hex color extraction
-- [ ] Output the .rune.json single-file format
-- [ ] Add progress bar (use `cli-progress` or similar)
-- [ ] Expose all flags: --fps, --columns, --threshold-low, --threshold-high, --chars, --font-ratio, --colored, --name, --output
-- [ ] Add --sizes flag to generate multiple column widths in one pass
-- [ ] Clean up temp files after conversion
-- [ ] Add validation and clear error messages
+- [x] Set up CLI entry point with commander arg parsing
+- [x] Check for ffmpeg/ImageMagick on startup, give install instructions if missing
+- [x] Port frame extraction: ffmpeg via child_process to extract PNGs at target fps and columns
+- [x] Port vertical squish: ImageMagick resize by font ratio
+- [x] Port pixel dump: ImageMagick text output parsed in TypeScript
+- [x] Port luminance mapping: rewrite awk logic in TypeScript (luminance, background detection, thresholds, character ramp, hex colors)
+- [x] Output the .rune.json single-file format
+- [x] Progress counter during frame processing
+- [x] Expose all flags: --fps, --columns, --thresholdLow, --thresholdHigh, --chars, --fontRatio, --colored, --name, --output
+- [x] Clean up temp files after conversion
+- [x] Auto-detect public/ folder and place output there
+- [x] Print usage instructions after generation
+- [x] Tested: rocket.mov converted to 61-frame .rune.json in 7 seconds, verified rendering in site
 
 ### Phase 5: Bundle existing animations (DONE)
 

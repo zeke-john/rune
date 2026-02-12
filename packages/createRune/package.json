@@ -16,6 +16,7 @@
     "dev": "tsup --watch"
   },
   "dependencies": {
+    "commander": "^14.0.3",
     "rune-ascii": "*"
   },
   "devDependencies": {
