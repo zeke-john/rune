@@ -4,6 +4,10 @@ Composable ASCII art animations for React. Drop in ASCII art animations the same
 
 Rune takes video files and converts them into grids of ASCII characters (frame by frame) so they can play as text-based animations in the browser. Each pixel's brightness is mapped to a character (dark pixels become dense characters like `@`, bright pixels become light ones like `.`) and each character can retain its original color. The result is a looping, purely text-rendered ASCII animation that you can adjust to any level of granularity.
 
+
+https://github.com/user-attachments/assets/bb892078-7fe0-4c16-8332-dbc67db3750a
+
+
 ## Quick start
 
 ```bash
