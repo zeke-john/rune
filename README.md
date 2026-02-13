@@ -1,12 +1,12 @@
 # Rune
 
+[![npm downloads](https://img.shields.io/npm/dt/rune-ascii?style=for-the-badge&logo=npm&logoColor=white&label=downloads&color=cb3837)](https://www.npmjs.com/package/rune-ascii)
+
 Composable ASCII art animations for React. Drop in ASCII art animations the same way you'd use an icon pack.
 
-Rune takes video files and converts them into grids of ASCII characters (frame by frame) so they can play as text-based animations in the browser. Each pixel's brightness is mapped to a character (dark pixels become dense characters like `@`, bright pixels become light ones like `.`) and each character can retain its original color. The result is a looping, purely text-rendered ASCII animation that you can adjust to any level of granularity.
-
+Rune takes video files and converts them into grids of ASCII characters (frame by frame) so they can play as text-based animations in the browser. Each pixel's brightness is mapped to a character (dark pixels become dense characters like `@`, bright pixels become light ones like `.`) and each character can retain its original color. The result is a looping, purely text-rendered ASCII animation that you can adjust to **any** level of granularity!
 
 https://github.com/user-attachments/assets/bb892078-7fe0-4c16-8332-dbc67db3750a
-
 
 ## Quick start
 
@@ -38,7 +38,6 @@ An example MP4 to ASCII animation:
 
 https://github.com/user-attachments/assets/ff6fe475-eafc-4d69-8d9b-b31c36696aea
 
-
 Under the hood, this pipeline runs:
 
 ```
@@ -64,7 +63,7 @@ The `<Rune>` React component handles everything:
 4. For colored animations, renders `<span>` elements with inline color styles
 5. For plain animations, sets text content directly
 
-The component is performance-conscious:
+The component is also performance conscious:
 
 - **Lazy loading**: only fetches animation data when the element is near the viewport (IntersectionObserver)
 - **Auto pause**: stops playing when scrolled out of view or when the browser tab loses focus
@@ -72,7 +71,7 @@ The component is performance-conscious:
 - **Incremental updates**: reuses DOM nodes and only updates characters that changed between frames
 - **Zero dependencies**: no Tailwind, no CSS files, just inline styles
 
-## Component API
+## Component Reference
 
 ```tsx
 import { Rune } from "rune-ascii";
@@ -155,7 +154,7 @@ npx @rune-ascii/cli generate ./video.mp4
 npx @rune-ascii/cli generate ./wave.mov \
   --name wave \
   --fps 30 \
-  --columns 100 \
+  --columns 120 \
   --colored \
   --output ./public/animations
 ```
@@ -254,7 +253,7 @@ Pre-generated `.rune.json` files published to npm. Users never install this dire
 
 ## How the CDN architecture works
 
-The `rune-ascii` package you install is tiny (~20 KB) because it contains zero animation data. Animation files live in the separate `@rune-ascii/animations` npm package, which jsDelivr mirrors automatically. When you render `<Rune name="ghost" />`, the component constructs a URL like:
+The `rune-ascii` package you install is only 20 KB because it contains zero animation data. Animation files live in the separate `@rune-ascii/animations` npm package, which jsDelivr mirrors automatically. When you render `<Rune name="ghost" />`, the component constructs a URL like:
 
 ```
 https://cdn.jsdelivr.net/npm/@rune-ascii/animations@0.1.2/ghost.rune.json
