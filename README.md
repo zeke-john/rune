@@ -34,6 +34,11 @@ You start with a short video clip (a 3D render, screen recording, whatever) and 
 npx @rune-ascii/cli generate ./video.mp4 --name "my-animation"
 ```
 
+An example MP4 to ASCII animation:
+
+https://github.com/user-attachments/assets/ff6fe475-eafc-4d69-8d9b-b31c36696aea
+
+
 Under the hood, this pipeline runs:
 
 ```
