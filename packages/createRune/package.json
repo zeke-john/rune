@@ -1,12 +1,11 @@
 {
-  "name": "create-rune",
+  "name": "@rune-ascii/cli",
   "version": "0.1.0",
   "description": "CLI for generating ASCII art animations from video",
   "type": "module",
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "bin": {
-    "create-rune": "./dist/index.js"
+    "rune-ascii": "./dist/index.js"
   },
   "files": [
     "dist"
@@ -16,10 +15,10 @@
     "dev": "tsup --watch"
   },
   "dependencies": {
-    "commander": "^14.0.3",
-    "rune-ascii": "*"
+    "commander": "^14.0.3"
   },
   "devDependencies": {
+    "@types/node": "^22.0.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
   },

@@ -1,12 +1,27 @@
 @import "tailwindcss";
 
-@theme {
-  --color-background: #000000;
-  --color-foreground: #e0e0e0;
+:root {
+  --bg: #000000;
+  --fg: #e0e0e0;
+  --muted: #666;
+  --card-bg: #0a0a0a;
+  --card-border: #1a1a1a;
+  --accent: #00ff41;
+  --btn-bg: #1a1a1a;
+  --btn-active: #3b82f6;
 }
 
 body {
-  background: #000;
-  color: #e0e0e0;
+  background: var(--bg);
+  color: var(--fg);
   overflow-x: hidden;
+}
+
+.nav-link {
+  text-decoration: none;
+}
+
+.nav-link:hover {
+  text-decoration: underline;
+  cursor: pointer;
 }
