@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Script from "next/script";
+// import Script from "next/script";
 import { Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -20,12 +20,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
+      {/* <head>
         <Script
           src="https://unpkg.com/react-scan/dist/auto.global.js"
           strategy="beforeInteractive"
         />
-      </head>
+      </head> */}
       <body
         className={`${geistMono.variable} ${geistMono.className} antialiased`}
       >
