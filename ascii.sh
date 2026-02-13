@@ -1,20 +1,35 @@
 #!/usr/bin/env bash
 
-# --- Configuration ---
-
-# The ratio between the width and height of the font used for rendering.
+# Terminal characters are taller than they are wide. This ratio squishes each frame
+# vertically so the ASCII output looks proportionally correct. Lower values = more
+# squished. 0.44 works for most monospace fonts.
 FONT_RATIO="0.44"
 
+# Pixels darker than this luminance (0–255) are treated as background in dark scenes
+# and replaced with a space. Raise it to ignore more near-black pixels.
 LUMINANCE_THRESHOLD_LOW=5
+
+# Pixels brighter than this luminance (0–255) are treated as background in light scenes
+# and replaced with a space. Lower it to ignore more near-white pixels.
 LUMINANCE_THRESHOLD_HIGH=235
 
+# The character palette used to represent brightness levels, ordered from darkest (space)
+# to brightest ($). Each pixel's luminance is mapped to one of these characters.
+# More characters = finer shading detail. You can rearrange or swap them out.
 ASCII_CHARS=" .~-_=+*%#0oOxX@$"
 
+# Accepted input video file extensions. Files with other extensions will be rejected.
 VIDEO_FORMATS=("mp4" "mkv" "mov" "avi")
+
+# How many frames per second to extract from the video. Higher = smoother playback
+# but more frames to process and larger output. Lower = choppier but faster to generate.
 OUTPUT_FPS=30
+
+# The width of the ASCII output in characters (columns). Higher values produce a more
+# detailed, higher-resolution result but take longer to process and need a wider terminal.
+# Lower values are faster and fit smaller terminals but lose fine detail, closer to actual ASCII.
 OUTPUT_COLUMNS=90
 
-# --- Functions ---
 
 detect_background() {
     awk '
