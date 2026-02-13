@@ -1,5 +1,8 @@
 # Rune
 
+![fye](https://github.com/user-attachments/assets/ca886f17-fbf7-4d1a-a98d-03558c2f182a)
+
+
 [![npm downloads](https://img.shields.io/npm/dt/rune-ascii?style=for-the-badge&logo=npm&logoColor=white&label=downloads&color=cb3837)](https://www.npmjs.com/package/rune-ascii)
 
 Composable ASCII art animations for React. Drop in ASCII art animations the same way you'd use an icon pack.
