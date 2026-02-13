@@ -2,7 +2,6 @@
 
 ![fye](https://github.com/user-attachments/assets/ca886f17-fbf7-4d1a-a98d-03558c2f182a)
 
-
 [![npm downloads](https://img.shields.io/npm/dt/rune-ascii?style=for-the-badge&logo=npm&logoColor=white&label=downloads&color=cb3837)](https://www.npmjs.com/package/rune-ascii)
 
 Composable ASCII art animations for React. Drop in ASCII art animations the same way you'd use an icon pack.
@@ -259,7 +258,7 @@ Pre-generated `.rune.json` files published to npm. Users never install this dire
 The `rune-ascii` package you install is only 20 KB because it contains zero animation data. Animation files live in the separate `@rune-ascii/animations` npm package, which jsDelivr mirrors automatically. When you render `<Rune name="ghost" />`, the component constructs a URL like:
 
 ```
-https://cdn.jsdelivr.net/npm/@rune-ascii/animations@0.1.2/ghost.rune.json
+https://cdn.jsdelivr.net/npm/@rune-ascii/animations@0.1.3/ghost.rune.json
 ```
 
 …and fetches just that one animation. The browser caches it. You only download the animations you actually use.

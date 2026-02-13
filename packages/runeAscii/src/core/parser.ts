@@ -1,5 +1,10 @@
 import type { RuneAnimation, RuneColoredFrame, RunePlainFrame } from "./types";
 
+export interface ColoredRunSegment {
+  text: string;
+  color: string;
+}
+
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, "&amp;")

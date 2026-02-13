@@ -1,5 +1,5 @@
 const DEFAULT_CDN_BASE =
-  "https://cdn.jsdelivr.net/npm/@rune-ascii/animations@0.1.2";
+  "https://cdn.jsdelivr.net/npm/@rune-ascii/animations@0.1.3";
 
 let cdnBase = DEFAULT_CDN_BASE;
 

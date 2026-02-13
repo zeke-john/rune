@@ -36,6 +36,12 @@ export class RuneRenderer {
     this.options = options;
   }
 
+  setFrames(frames: string[]) {
+    this.plainFrames = frames;
+    this.coloredFrames = [];
+    this.frameIndex = 0;
+  }
+
   setPlainFrames(frames: string[]) {
     this.plainFrames = frames;
     this.coloredFrames = [];
@@ -64,8 +70,10 @@ export class RuneRenderer {
 
   renderCurrentFrame() {
     if (!this.element) return;
-    if (this.options.colored) {
+    if (this.coloredFrames.length > 0) {
       this.renderColoredFrame();
+    } else if (this.options.colored) {
+      this.renderColoredPlainFrame();
     } else {
       this.renderPlainFrame();
     }
@@ -96,6 +104,13 @@ export class RuneRenderer {
   private renderPlainFrame() {
     if (!this.element || this.plainFrames.length === 0) return;
     this.element.textContent = this.plainFrames[this.frameIndex];
+  }
+
+  /* ---- Colored rendering via HTML strings (from parseFrames) ---- */
+
+  private renderColoredPlainFrame() {
+    if (!this.element || this.plainFrames.length === 0) return;
+    this.element.innerHTML = this.plainFrames[this.frameIndex];
   }
 
   /* ---- Colored rendering via incremental DOM ---- */
@@ -161,7 +176,7 @@ export class RuneRenderer {
 
   private tick = (time: number) => {
     const frameTime = 1000 / this.options.fps;
-    const totalFrames = this.options.colored
+    const totalFrames = this.coloredFrames.length > 0
       ? this.coloredFrames.length
       : this.plainFrames.length;
 

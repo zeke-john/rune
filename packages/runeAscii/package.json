@@ -1,6 +1,6 @@
 {
   "name": "rune-ascii",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Composable ASCII art animations for React",
   "type": "module",
   "main": "./dist/index.cjs",
