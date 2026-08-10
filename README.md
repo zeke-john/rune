@@ -1,3 +1,5 @@
+
+
 # Rune
 
 ![fye](https://github.com/user-attachments/assets/ca886f17-fbf7-4d1a-a98d-03558c2f182a)
@@ -81,7 +83,7 @@ import { Rune } from "rune-ascii";
 // Built-in animation from CDN
 <Rune name="ghost" />
 
-// Smaller size variant (45 columns instead of 90)
+// Smaller size variant (50 columns instead of 90)
 <Rune name="ghost" size="s" />
 
 // Control playback
@@ -103,7 +105,7 @@ import { Rune } from "rune-ascii";
 | Prop           | Type                      | Default   | Description                              |
 | -------------- | ------------------------- | --------- | ---------------------------------------- |
 | `name`         | `string`                  | —         | Animation name, fetches from CDN         |
-| `size`         | `"s" \| "m"`              | `"m"`     | Size variant (45 or 90 columns)          |
+| `size`         | `"s" \| "m"`              | `"m"`     | Size variant (50 or 90 columns)          |
 | `data`         | `RuneAnimation`           | —         | Pass animation data directly             |
 | `src`          | `string`                  | —         | URL to fetch animation data from         |
 | `playing`      | `boolean`                 | `true`    | Play/pause control                       |
